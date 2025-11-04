@@ -1,0 +1,5 @@
+{
+  "name": "Produits Mercadona Maroc",
+  "description": "A minimalist and elegant e-commerce web application for Produits Mercadona Maroc, inspired by high-end brand aesthetics. Built with React and Tailwind CSS, it features a clean product catalog, detailed product pages with related items, and a streamlined shopping cart and checkout experience using Firebase.",
+  "requestFramePermissions": []
+}
