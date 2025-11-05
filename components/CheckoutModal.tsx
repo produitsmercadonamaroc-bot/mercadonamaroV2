@@ -75,28 +75,11 @@ const CheckoutModal: React.FC = () => {
         items: cartItems.map(({ id, name, salePrice, quantity }) => ({ id, name, price: salePrice, quantity })),
         total: finalTotal,
     };
-    
-    const orderToStore = {
-        ...orderForSheet,
-        id: `mock_${Date.now()}`,
-        createdAt: new Date().toISOString(),
-    };
 
-    // 1. Save to localStorage first (fast, reliable backup)
-    try {
-      const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-      localStorage.setItem('orders', JSON.stringify([...existingOrders, orderToStore]));
-    } catch (localError) {
-        console.error("Failed to save order to local storage:", localError);
-        setError('Une erreur critique est survenue. Veuillez réessayer.');
-        return; // Stop if we can't even save locally
-    }
-
-    // 2. Send to Google Sheet in the background (fire and forget).
-    // We don't 'await' it, so the UI updates instantly.
+    // 1. Send to Google Sheet in the background (fire and forget).
     logOrderToSheet(orderForSheet);
 
-    // 3. Show success to the user immediately.
+    // 2. Show success to the user immediately.
     clearCart();
     setIsOrderSuccess(true);
   };
