@@ -7,7 +7,6 @@ import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
 import CartModal from './components/CartModal';
 import CheckoutModal from './components/CheckoutModal';
-import AdminPage from './pages/AdminPage';
 import { useUI } from './hooks/useUI';
 
 // Dummy components for new routes
@@ -46,7 +45,6 @@ const App: React.FC = () => {
                 <Route path="/catalogue" element={<CataloguePage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/product/:id" element={<ProductPage />} />
-                <Route path="/admin" element={<AdminPage />} />
               </Routes>
             </main>
             <footer className="bg-white py-8 border-t border-gray-200">
