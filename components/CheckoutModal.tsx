@@ -1,22 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import { useUI } from '../hooks/useUI';
 import { useCart } from '../hooks/useCart';
 import { Order } from '../types';
+import { getDeliveryFee, getCityList } from '../utils/shippingData';
 
 //  👇👇👇 LIEN LI GHATJIB MEN APPS SCRIPT, LصقO HNA 👇👇👇
 const GOOGLE_SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzm0RVh06-qE7x7r6J0NWdwo8EOj2O91RILusXZ30g5YD-5kVN-GoLze-seZAFvtpDMQw/exec'; // <-- 👈 BDEL HNA!
-
-const DELIVERY_FEE = 35.00;
 
 const CheckoutModal: React.FC = () => {
   const { isCheckoutOpen, closeCheckout } = useUI();
   const { cartItems, cartTotal, clearCart } = useCart();
   const [formData, setFormData] = useState({ name: '', phone: '', address: '', city: '' });
+  const [deliveryFee, setDeliveryFee] = useState(0); // Default to 0
   const [error, setError] = useState('');
   const [isOrderSuccess, setIsOrderSuccess] = useState(false);
+  
+  const cityList = getCityList();
 
-  const finalTotal = cartTotal + DELIVERY_FEE;
+  useEffect(() => {
+    if (formData.city && formData.city.trim() !== '') {
+        const fee = getDeliveryFee(formData.city);
+        setDeliveryFee(fee);
+    } else {
+        setDeliveryFee(0);
+    }
+  }, [formData.city]);
+
+  const finalTotal = cartTotal + deliveryFee;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -29,6 +40,7 @@ const CheckoutModal: React.FC = () => {
         setIsOrderSuccess(false);
         setFormData({ name: '', phone: '', address: '', city: '' });
         setError('');
+        setDeliveryFee(0);
     }, 300); // Should match modal animation duration
   };
 
@@ -124,34 +136,74 @@ const CheckoutModal: React.FC = () => {
                                 <input type="radio" id="delivery" name="delivery" defaultChecked className="h-4 w-4 text-primary focus:ring-primary border-gray-300" />
                                 <label htmlFor="delivery" className="ml-3 block text-sm font-medium text-primary">Paiement à la livraison</label>
                             </div>
-                            <span className="text-sm font-semibold text-primary">{DELIVERY_FEE.toFixed(2)} dh</span>
+                            <span className="text-sm font-semibold text-primary">{deliveryFee > 0 ? `${deliveryFee.toFixed(2)} dh` : 'Calculé à la prochaine étape'}</span>
                         </div>
                     </div>
 
                     <div className="space-y-4">
                         <h3 className="font-semibold text-primary">Insérez votre adresse de livraison</h3>
                         
-                        {[
-                            { id: 'name', label: 'Nom Complet', type: 'text', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg> },
-                            { id: 'phone', label: 'Téléphone', type: 'tel', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg> },
-                            { id: 'address', label: 'Adresse', type: 'text', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg> },
-                            { id: 'city', label: 'Ville', type: 'text', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg> },
-                        ].map(({id, label, type, icon}) => (
-                            <div key={id}>
-                                <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label} <span className="text-red-500">*</span></label>
-                                <div className="relative">
-                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">{icon}</span>
-                                    <input type={type} name={id} id={id} required value={formData[id as keyof typeof formData]} onChange={handleChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary" />
-                                </div>
+                        <div>
+                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Nom Complet <span className="text-red-500">*</span></label>
+                            <div className="relative">
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
+                                </span>
+                                <input type="text" name="name" id="name" required value={formData.name} onChange={handleChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary" />
                             </div>
-                        ))}
+                        </div>
+
+                        <div>
+                            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Téléphone <span className="text-red-500">*</span></label>
+                            <div className="relative">
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
+                                </span>
+                                <input type="tel" name="phone" id="phone" required value={formData.phone} onChange={handleChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">Adresse <span className="text-red-500">*</span></label>
+                            <div className="relative">
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>
+                                </span>
+                                <input type="text" name="address" id="address" required value={formData.address} onChange={handleChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">Ville <span className="text-red-500">*</span></label>
+                            <div className="relative">
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>
+                                </span>
+                                <input 
+                                    type="text" 
+                                    name="city" 
+                                    id="city" 
+                                    list="city-options" 
+                                    required 
+                                    value={formData.city} 
+                                    onChange={handleChange} 
+                                    placeholder="Commencez à écrire votre ville..."
+                                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary" 
+                                />
+                                <datalist id="city-options">
+                                    {cityList.map((city, index) => (
+                                        <option key={index} value={city.charAt(0).toUpperCase() + city.slice(1)} />
+                                    ))}
+                                </datalist>
+                            </div>
+                        </div>
                     </div>
 
                     {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
                     
                     <div className="mt-6 pt-4 border-t border-gray-200 space-y-2">
                         <div className="flex justify-between text-sm text-secondary"><span>Sous-total</span><span>{cartTotal.toFixed(2)} dh</span></div>
-                        <div className="flex justify-between text-sm text-secondary"><span>Livraison</span><span>{DELIVERY_FEE.toFixed(2)} dh</span></div>
+                        <div className="flex justify-between text-sm text-secondary"><span>Livraison</span><span>{deliveryFee > 0 ? `${deliveryFee.toFixed(2)} dh` : 'Gratuit / En attente'}</span></div>
                         <div className="flex justify-between text-base font-bold text-primary"><span>Total</span><span>{finalTotal.toFixed(2)} dh</span></div>
                     </div>
                 </div>
