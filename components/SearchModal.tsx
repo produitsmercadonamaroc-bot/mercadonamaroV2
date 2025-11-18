@@ -20,10 +20,14 @@ const SearchModal: React.FC = () => {
           setLoading(true);
           const productsCollection = collection(db, 'products');
           const productSnapshot = await getDocs(productsCollection);
-          const productsList = productSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-          } as Product));
+          const productsList = productSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              stock: Number(data['availableStock']) || 0,
+            } as Product
+          });
           setAllProducts(productsList);
         } catch (err) {
           console.error("Erreur de chargement des produits pour la recherche:", err);

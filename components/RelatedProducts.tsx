@@ -22,7 +22,14 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProductId }) =
         const querySnapshot = await getDocs(q);
 
         const relatedProducts = querySnapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() } as Product))
+          .map(doc => {
+            const data = doc.data();
+            return { 
+              id: doc.id, 
+              ...data,
+              stock: Number(data['availableStock']) || 0,
+            } as Product
+          })
           .filter(p => p.id !== currentProductId)
           .slice(0, 4);
         
