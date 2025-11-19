@@ -51,13 +51,17 @@ const CheckoutModal: React.FC = () => {
       return;
     }
     const itemsString = orderData.items.map(item => `${item.name} (x${item.quantity})`).join(', ');
+    
+    // Format: Prix produits + Prix livraison (ex: 26.00dh + 20.00dh)
+    const formattedTotal = `${cartTotal.toFixed(2)}dh + ${deliveryFee.toFixed(2)}dh`;
+
     const rowData = {
       'Date': new Date().toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
       'Nom Client': orderData.name,
       'Téléphone': orderData.phone,
       'Adresse': orderData.address,
       'Ville': orderData.city,
-      'Total (DH)': orderData.total,
+      'Total (DH)': formattedTotal,
       'Produits': itemsString,
     };
     try {
