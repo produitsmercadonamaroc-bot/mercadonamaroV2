@@ -6,7 +6,11 @@ import ProductCard from '../components/ProductCard';
 import Spinner from '../components/Spinner';
 import { useUI } from '../hooks/useUI';
 
-const ShopPage: React.FC = () => {
+interface ShopPageProps {
+  category?: 'all' | 'pack' | 'sur-commande';
+}
+
+const ShopPage: React.FC<ShopPageProps> = ({ category = 'all' }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +27,7 @@ const ShopPage: React.FC = () => {
           return {
             id: doc.id,
             ...data,
-            stock: Number(data['availableStock']) || 0,
+            stock: Number(data['availableStock']) || Number(data['Stock Initial']) || 0,
           } as Product
         });
         setProducts(productsList);
@@ -39,13 +43,33 @@ const ShopPage: React.FC = () => {
   }, []);
 
   const filteredProducts = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return products;
+    let filtered = products;
+
+    // Filter by category type
+    if (category === 'pack') {
+      filtered = filtered.filter(p => p.name.toLowerCase().includes('pack'));
+    } else if (category === 'sur-commande') {
+      filtered = filtered.filter(p => p.name.toLowerCase().includes('sur commande'));
     }
-    return products.filter(p => 
-      p.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [products, searchTerm]);
+
+    // Filter by search term
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    return filtered;
+  }, [products, searchTerm, category]);
+
+  const getPageTitle = () => {
+    if (searchTerm) return `Résultats pour "${searchTerm}"`;
+    switch (category) {
+      case 'pack': return 'Nos Packs';
+      case 'sur-commande': return 'Sur Commande';
+      default: return 'Nos Produits';
+    }
+  };
 
   if (loading) {
     return <Spinner />;
@@ -58,7 +82,7 @@ const ShopPage: React.FC = () => {
   return (
     <div>
       <h1 className="text-4xl md:text-5xl font-serif font-bold mb-12 text-center text-primary">
-        {searchTerm ? `Résultats pour "${searchTerm}"` : 'Nos Produits'}
+        {getPageTitle()}
       </h1>
 
       {products.length === 0 && !loading ? (
@@ -66,7 +90,7 @@ const ShopPage: React.FC = () => {
       ) : (
         <>
           {filteredProducts.length === 0 ? (
-            <p className="text-center text-secondary">Aucun produit ne correspond à votre recherche.</p>
+            <p className="text-center text-secondary">Aucun produit ne correspond à vos critères.</p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
               {filteredProducts.map(product => (

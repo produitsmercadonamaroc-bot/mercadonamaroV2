@@ -6,7 +6,6 @@ import Logo from './Logo';
 
 const Header: React.FC = () => {
   const { cartCount } = useCart();
-  // FIX: Added openCart to the destructuring assignment.
   const { isSearchOpen, openSearch, closeSearch, searchTerm, setSearchTerm, openCart } = useUI();
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -72,7 +71,8 @@ const Header: React.FC = () => {
           ) : (
             <nav className="flex justify-center items-center gap-8 py-4">
               <NavLink to="/" className={navLinkClass}>Accueil</NavLink>
-              <NavLink to="/catalogue" className={navLinkClass}>Catalogue</NavLink>
+              <NavLink to="/packs" className={navLinkClass}>Nos Packs</NavLink>
+              <NavLink to="/sur-commande" className={navLinkClass}>Sur commande</NavLink>
               <NavLink to="/contact" className={navLinkClass}>Contact</NavLink>
             </nav>
           )}

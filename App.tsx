@@ -9,8 +9,6 @@ import CartModal from './components/CartModal';
 import CheckoutModal from './components/CheckoutModal';
 import { useUI } from './hooks/useUI';
 
-// Dummy components for new routes
-const CataloguePage = () => <ShopPage />;
 const ContactPage = () => (
     <div className="text-center py-20">
         <h1 className="text-4xl font-serif font-bold mb-4">Contactez-nous</h1>
@@ -41,8 +39,9 @@ const App: React.FC = () => {
             <Header />
             <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
               <Routes>
-                <Route path="/" element={<ShopPage />} />
-                <Route path="/catalogue" element={<CataloguePage />} />
+                <Route path="/" element={<ShopPage category="all" />} />
+                <Route path="/packs" element={<ShopPage category="pack" />} />
+                <Route path="/sur-commande" element={<ShopPage category="sur-commande" />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/product/:id" element={<ProductPage />} />
               </Routes>
