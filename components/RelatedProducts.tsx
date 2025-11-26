@@ -24,10 +24,15 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProductId }) =
         const relatedProducts = querySnapshot.docs
           .map(doc => {
             const data = doc.data();
-            // Prioritize 'stock' field
-            const stockValue = data['stock'] !== undefined 
-            ? Number(data['stock']) 
-            : (Number(data['availableStock']) || Number(data['Stock Initial']) || 0);
+            
+            // Calcul du stock : on prend la valeur maximale parmi tous les champs possibles
+            const stockValue = Math.max(
+                Number(data['stock'] || 0),
+                Number(data['availableStock'] || 0),
+                Number(data['Stock Initial'] || 0),
+                Number(data['disponible'] || 0),
+                Number(data['Disponible'] || 0)
+            );
 
             return { 
               id: doc.id, 
