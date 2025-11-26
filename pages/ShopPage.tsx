@@ -59,9 +59,15 @@ const ShopPage: React.FC<ShopPageProps> = ({ category = 'all' }) => {
 
     // Filter by category type
     if (category === 'pack') {
-      filtered = filtered.filter(p => p.name.toLowerCase().includes('pack'));
+      filtered = filtered.filter(p => 
+        // Doit être un pack (Nom ou Catégorie)
+        (p.name.toLowerCase().includes('pack') || 
+         (p.category && p.category.toLowerCase() === 'pack')) &&
+        // ET NE DOIT PAS être sur commande
+        !p.isOrderBased
+      );
     } else if (category === 'sur-commande') {
-      // Filter by isOrderBased property
+      // Filter by isOrderBased property uniquement
       filtered = filtered.filter(p => p.isOrderBased === true);
     }
 

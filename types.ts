@@ -8,6 +8,7 @@ export interface Product {
   salePrice: number;
   stock?: number;
   isOrderBased?: boolean;
+  category?: string;
 }
 
 export interface CartItem extends Product {
