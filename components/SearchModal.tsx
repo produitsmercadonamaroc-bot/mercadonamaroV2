@@ -22,10 +22,15 @@ const SearchModal: React.FC = () => {
           const productSnapshot = await getDocs(productsCollection);
           const productsList = productSnapshot.docs.map(doc => {
             const data = doc.data();
+            // Prioritize 'stock' field
+            const stockValue = data['stock'] !== undefined 
+            ? Number(data['stock']) 
+            : (Number(data['availableStock']) || Number(data['Stock Initial']) || 0);
+
             return {
               id: doc.id,
               ...data,
-              stock: Number(data['availableStock']) || 0,
+              stock: stockValue,
             } as Product
           });
           setAllProducts(productsList);

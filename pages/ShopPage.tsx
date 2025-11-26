@@ -24,10 +24,16 @@ const ShopPage: React.FC<ShopPageProps> = ({ category = 'all' }) => {
         const productSnapshot = await getDocs(productsCollection);
         const productsList = productSnapshot.docs.map(doc => {
           const data = doc.data();
+          // Prioritize 'stock' field, then fallbacks
+          const stockValue = data['stock'] !== undefined 
+            ? Number(data['stock']) 
+            : (Number(data['availableStock']) || Number(data['Stock Initial']) || 0);
+
           return {
             id: doc.id,
             ...data,
-            stock: Number(data['availableStock']) || Number(data['Stock Initial']) || 0,
+            stock: stockValue,
+            isOrderBased: data['isOrderBased'],
           } as Product
         });
         setProducts(productsList);
@@ -49,7 +55,8 @@ const ShopPage: React.FC<ShopPageProps> = ({ category = 'all' }) => {
     if (category === 'pack') {
       filtered = filtered.filter(p => p.name.toLowerCase().includes('pack'));
     } else if (category === 'sur-commande') {
-      filtered = filtered.filter(p => p.name.toLowerCase().includes('sur commande'));
+      // Filter by isOrderBased property
+      filtered = filtered.filter(p => p.isOrderBased === true);
     }
 
     // Filter by search term

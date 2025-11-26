@@ -32,10 +32,15 @@ const ProductPage: React.FC = () => {
 
         if (productSnap.exists()) {
           const data = productSnap.data();
+          // Prioritize 'stock' field
+          const stockValue = data['stock'] !== undefined 
+            ? Number(data['stock']) 
+            : (Number(data['availableStock']) || Number(data['Stock Initial']) || 0);
+
           setProduct({ 
             id: productSnap.id, 
             ...data,
-            stock: Number(data['availableStock']) || 0,
+            stock: stockValue,
           } as Product);
         } else {
           setError('Produit non trouvé.');
