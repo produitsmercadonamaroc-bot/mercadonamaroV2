@@ -8,10 +8,6 @@ import { useCart } from '../hooks/useCart';
 import { useUI } from '../hooks/useUI';
 import RelatedProducts from '../components/RelatedProducts';
 
-// Image placeholder simple et légère (SVG encodé)
-const PLACEHOLDER_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22600%22%20height%3D%22600%22%20viewBox%3D%220%200%20600%20600%22%3E%3Crect%20width%3D%22600%22%20height%3D%22600%22%20fill%3D%22%23f3f4f6%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2230%22%20fill%3D%22%239ca3af%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%3EImage%20non%20disponible%3C%2Ftext%3E%3C%2Fsvg%3E";
-
-
 const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
@@ -79,9 +75,7 @@ const ProductPage: React.FC = () => {
   };
   
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    // Si l'image ne charge pas, on met le placeholder
-    e.currentTarget.src = PLACEHOLDER_IMAGE;
-    e.currentTarget.onerror = null; 
+    e.currentTarget.src = `https://picsum.photos/seed/${id}/600/600`;
   };
   
   const handleQuantityChange = (amount: number) => {
@@ -100,7 +94,7 @@ const ProductPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-start">
             <div className="bg-accent rounded-lg p-4 flex justify-center items-center aspect-square md:sticky md:top-28">
                 <img 
-                    src={product.image || PLACEHOLDER_IMAGE}
+                    src={product.image || `https://picsum.photos/seed/${id}/600/600`}
                     alt={product.name} 
                     onError={handleImageError}
                     className={`w-full max-w-md h-auto object-contain ${isOutOfStock ? 'opacity-60' : ''}`}
@@ -118,7 +112,7 @@ const ProductPage: React.FC = () => {
                 )}
 
                 <p className="text-secondary leading-relaxed text-sm">
-                  {product.description || 'Frais d\'expédition calculés à l\'étape du paiement.'}
+                  {product.description || 'Frais d\\\'expédition calculés à l\\\'étape du paiement.'}
                 </p>
 
                 <div className="flex items-center space-x-4">
