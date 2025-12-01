@@ -31,6 +31,8 @@ const ShopPage: React.FC<ShopPageProps> = ({ category = 'all' }) => {
             Number(data['stock'] || 0),
             Number(data['availableStock'] || 0),
             Number(data['Stock Initial'] || 0),
+            Number(data['stockInitial'] || 0),
+            Number(data['STOCK INITIAL'] || 0),
             Number(data['disponible'] || 0),
             Number(data['Disponible'] || 0)
           );
@@ -81,6 +83,9 @@ const ShopPage: React.FC<ShopPageProps> = ({ category = 'all' }) => {
         p.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+
+    // Tri alphabétique par nom
+    filtered.sort((a, b) => a.name.localeCompare(b.name));
 
     return filtered;
   }, [products, searchTerm, category]);
