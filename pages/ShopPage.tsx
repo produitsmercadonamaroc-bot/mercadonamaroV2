@@ -69,6 +69,10 @@ const ShopPage: React.FC<ShopPageProps> = ({ category = 'all' }) => {
     } else if (category === 'sur-commande') {
       // Filter by isOrderBased property uniquement
       filtered = filtered.filter(p => p.isOrderBased === true);
+    } else {
+      // Pour l'accueil ('all'), on EXCLUT les produits sur commande
+      // Ils ne doivent apparaître que dans leur section dédiée
+      filtered = filtered.filter(p => !p.isOrderBased);
     }
 
     // Filter by search term
