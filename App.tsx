@@ -12,7 +12,7 @@ import { useUI } from './hooks/useUI';
 const ContactPage = () => (
     <div className="text-center py-20">
         <h1 className="text-4xl font-serif font-bold mb-4">Contactez-nous</h1>
-        <p className="text-secondary">Pour toute question, veuillez nous envoyer un email à contact@mercadonamaroc.ma</p>
+        <p className="text-secondary">Pour toute question, veuillez nous envoyer un email à contact@mercadonamaroc.com</p>
         <Link to="/" className="mt-8 inline-block text-primary font-semibold border-b-2 border-primary pb-1">Retour à l'accueil</Link>
     </div>
 );
