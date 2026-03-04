@@ -4,7 +4,9 @@
   "description": "E-commerce for Mercadona Maroc",
   "main": "index.js",
   "scripts": {
-    "build": "rm -rf dist && mkdir dist && cp index.html dist/ && esbuild index.tsx --bundle --outfile=dist/bundle.js --jsx=automatic"
+    "build": "rm -rf dist && mkdir dist && cp index.html dist/ && esbuild index.tsx --bundle --outfile=dist/bundle.js --jsx=automatic",
+    "dev": "npm run build && npx -y serve dist -p 3000",
+    "start": "npx -y serve dist -p 3000"
   },
   "dependencies": {
     "firebase": "^12.5.0",

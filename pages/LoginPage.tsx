@@ -29,7 +29,7 @@ const LoginPage: React.FC = () => {
   return (
     <div className="max-w-md mx-auto py-20 px-4">
       <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-        <h1 className="text-3xl font-serif font-bold text-center mb-8">Connexion Admin</h1>
+        <h1 className="text-3xl font-serif font-bold text-center mb-8">Connexion</h1>
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>

@@ -14,7 +14,7 @@ const Header: React.FC = () => {
   return (
     <>
       <div className="bg-primary text-white text-center py-2 text-xs font-semibold tracking-widest uppercase">
-        Livraison gratuite +500 DH
+        Livraison gratuite +1000 DH
       </div>
       <header className="bg-white/95 backdrop-blur-sm sticky top-0 z-40 border-b border-gray-200">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
