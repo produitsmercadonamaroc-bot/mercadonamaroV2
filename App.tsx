@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
@@ -5,6 +6,8 @@ import { UIProvider } from './context/UIContext';
 import Header from './components/Header';
 import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
+import AdminPage from './pages/AdminPage';
+import LoginPage from './pages/LoginPage';
 import CartModal from './components/CartModal';
 import CheckoutModal from './components/CheckoutModal';
 import { useUI } from './hooks/useUI';
@@ -44,11 +47,14 @@ const App: React.FC = () => {
                 <Route path="/sur-commande" element={<ShopPage category="sur-commande" />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/product/:id" element={<ProductPage />} />
+                <Route path="/admin" element={<AdminPage />} />
+                <Route path="/login" element={<LoginPage />} />
               </Routes>
             </main>
             <footer className="bg-white py-8 border-t border-gray-200">
                 <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-secondary text-sm">
                     <p>&copy; {new Date().getFullYear()} PRODUITS MERCADONA MAROC. Tous droits réservés.</p>
+                    <Link to="/admin" className="mt-2 inline-block opacity-0 hover:opacity-100 transition-opacity">Panel Admin</Link>
                 </div>
             </footer>
           </div>

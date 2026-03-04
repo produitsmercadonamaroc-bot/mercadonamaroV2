@@ -19,7 +19,7 @@ const ProductPage: React.FC = () => {
 
   useEffect(() => {
     setLoading(true);
-    setQuantity(1); // Reset quantity when product changes
+    setQuantity(1);
     const fetchProduct = async () => {
       if (!id) {
         setError("ID de produit manquant.");
@@ -33,18 +33,15 @@ const ProductPage: React.FC = () => {
         if (productSnap.exists()) {
           const data = productSnap.data();
           
-          // Calcul du stock : on prend la valeur maximale parmi tous les champs possibles
-          const stockValue = Math.max(
-            Number(data['stock'] || 0),
-            Number(data['availableStock'] || 0),
-            Number(data['Stock Initial'] || 0),
-            Number(data['disponible'] || 0),
-            Number(data['Disponible'] || 0)
-          );
+          const rawStock = data['availableStock'] ?? data['stock'] ?? data['initialStock'] ?? 0;
+          const stockValue = isNaN(Number(rawStock)) ? 0 : Number(rawStock);
+
+          const salePriceValue = Number(data['salePrice'] ?? data['SALE PRICE'] ?? data['price'] ?? 0);
 
           setProduct({ 
             id: productSnap.id, 
             ...data,
+            salePrice: salePriceValue,
             stock: stockValue,
           } as Product);
         } else {
@@ -82,7 +79,6 @@ const ProductPage: React.FC = () => {
     setQuantity(prev => Math.max(1, prev + amount));
   };
 
-
   if (loading) return <Spinner />;
   if (error) return <p className="text-center text-red-500">{error}</p>;
   if (!product) return <p className="text-center text-secondary">Produit introuvable.</p>;
@@ -103,7 +99,7 @@ const ProductPage: React.FC = () => {
             <div className="flex flex-col space-y-6 pt-4">
                 <p className="text-sm font-semibold tracking-widest text-secondary uppercase">PRODUITS MERCADONA MAROC</p>
                 <h1 className="text-4xl md:text-5xl font-serif font-bold text-primary capitalize">{product.name}</h1>
-                <p className="text-3xl font-semibold text-primary">{product.salePrice.toFixed(2)} DH</p>
+                <p className="text-3xl font-semibold text-primary">{(product.salePrice || 0).toFixed(2)} DH</p>
                 
                 {isOutOfStock && (
                     <div className="p-3 bg-red-50 border border-red-200 rounded-md text-center">
@@ -112,7 +108,7 @@ const ProductPage: React.FC = () => {
                 )}
 
                 <p className="text-secondary leading-relaxed text-sm">
-                  {product.description || 'Frais d\\\'expédition calculés à l\\\'étape du paiement.'}
+                  {product.description || 'Frais d\'expédition calculés à l\'étape du paiement.'}
                 </p>
 
                 <div className="flex items-center space-x-4">

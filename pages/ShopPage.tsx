@@ -25,23 +25,18 @@ const ShopPage: React.FC<ShopPageProps> = ({ category = 'all' }) => {
         const productsList = productSnapshot.docs.map(doc => {
           const data = doc.data();
           
-          // Calcul du stock : on prend la valeur maximale parmi tous les champs possibles
-          // pour s'assurer qu'on ne rate pas le stock s'il est mal placé (ex: packs)
-          const stockValue = Math.max(
-            Number(data['stock'] || 0),
-            Number(data['availableStock'] || 0),
-            Number(data['Stock Initial'] || 0),
-            Number(data['stockInitial'] || 0),
-            Number(data['STOCK INITIAL'] || 0),
-            Number(data['disponible'] || 0),
-            Number(data['Disponible'] || 0)
-          );
+          // Mapping intelligent du stock basé sur la capture d'écran (availableStock est prioritaire)
+          const rawStock = data['availableStock'] ?? data['stock'] ?? data['initialStock'] ?? 0;
+          const stockValue = isNaN(Number(rawStock)) ? 0 : Number(rawStock);
+
+          const salePriceValue = Number(data['salePrice'] ?? data['SALE PRICE'] ?? data['price'] ?? 0);
 
           return {
             id: doc.id,
             ...data,
+            salePrice: salePriceValue,
             stock: stockValue,
-            isOrderBased: data['isOrderBased'],
+            isOrderBased: data['isOrderBased'] ?? false,
           } as Product
         });
         setProducts(productsList);
@@ -59,33 +54,25 @@ const ShopPage: React.FC<ShopPageProps> = ({ category = 'all' }) => {
   const filteredProducts = useMemo(() => {
     let filtered = products;
 
-    // Filter by category type
     if (category === 'pack') {
       filtered = filtered.filter(p => 
-        // Doit être un pack (Nom ou Catégorie)
-        (p.name.toLowerCase().includes('pack') || 
+        (p.name?.toLowerCase().includes('pack') || 
          (p.category && p.category.toLowerCase() === 'pack')) &&
-        // ET NE DOIT PAS être sur commande
         !p.isOrderBased
       );
     } else if (category === 'sur-commande') {
-      // Filter by isOrderBased property uniquement
       filtered = filtered.filter(p => p.isOrderBased === true);
     } else {
-      // Pour l'accueil ('all'), on EXCLUT les produits sur commande
-      // Ils ne doivent apparaître que dans leur section dédiée
       filtered = filtered.filter(p => !p.isOrderBased);
     }
 
-    // Filter by search term
     if (searchTerm.trim()) {
       filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(searchTerm.toLowerCase())
+        p.name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Tri alphabétique par nom
-    filtered.sort((a, b) => a.name.localeCompare(b.name));
+    filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
     return filtered;
   }, [products, searchTerm, category]);
@@ -99,13 +86,8 @@ const ShopPage: React.FC<ShopPageProps> = ({ category = 'all' }) => {
     }
   };
 
-  if (loading) {
-    return <Spinner />;
-  }
-
-  if (error) {
-    return <p className="text-center text-red-500">{error}</p>;
-  }
+  if (loading) return <Spinner />;
+  if (error) return <p className="text-center text-red-500">{error}</p>;
 
   return (
     <div>

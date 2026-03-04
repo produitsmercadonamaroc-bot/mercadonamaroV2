@@ -17,30 +17,27 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProductId }) =
       try {
         setLoading(true);
         const productsRef = collection(db, 'products');
-        // Fetch 5 products to have enough to show 4 related ones after filtering
-        const q = query(productsRef, limit(5));
+        const q = query(productsRef, limit(10));
         const querySnapshot = await getDocs(q);
 
         const relatedProducts = querySnapshot.docs
           .map(doc => {
             const data = doc.data();
             
-            // Calcul du stock : on prend la valeur maximale parmi tous les champs possibles
-            const stockValue = Math.max(
-                Number(data['stock'] || 0),
-                Number(data['availableStock'] || 0),
-                Number(data['Stock Initial'] || 0),
-                Number(data['disponible'] || 0),
-                Number(data['Disponible'] || 0)
-            );
+            const rawStock = data['availableStock'] ?? data['stock'] ?? 0;
+            const stockValue = isNaN(Number(rawStock)) ? 0 : Number(rawStock);
+
+            const salePriceValue = Number(data['salePrice'] ?? data['SALE PRICE'] ?? data['price'] ?? 0);
 
             return { 
               id: doc.id, 
               ...data,
+              salePrice: salePriceValue,
               stock: stockValue,
             } as Product
           })
           .filter(p => p.id !== currentProductId)
+          .sort(() => 0.5 - Math.random())
           .slice(0, 4);
         
         setProducts(relatedProducts);
@@ -54,13 +51,11 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProductId }) =
     fetchRelatedProducts();
   }, [currentProductId]);
 
-  if (loading || products.length === 0) {
-    return null;
-  }
+  if (loading || products.length === 0) return null;
 
   return (
     <div className="mt-20 pt-16 border-t border-gray-200">
-      <h2 className="text-3xl font-serif font-bold text-center mb-10 text-primary">You may also like</h2>
+      <h2 className="text-3xl font-serif font-bold text-center mb-10 text-primary">Vous aimerez aussi</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
         {products.map(product => (
           <ProductCard key={product.id} product={product} />

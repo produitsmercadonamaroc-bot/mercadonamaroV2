@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import { useUI } from '../hooks/useUI';
 import { useCart } from '../hooks/useCart';
 import { Order } from '../types';
 import { getDeliveryFee, getCityList } from '../utils/shippingData';
+import { addSaleToDb } from '../services/store';
 
 //  👇👇👇 LIEN LI GHATJIB MEN APPS SCRIPT, LصقO HNA 👇👇👇
 const GOOGLE_SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzm0RVh06-qE7x7r6J0NWdwo8EOj2O91RILusXZ30g5YD-5kVN-GoLze-seZAFvtpDMQw/exec'; // <-- 👈 BDEL HNA!
@@ -15,6 +17,7 @@ const CheckoutModal: React.FC = () => {
   const [deliveryFee, setDeliveryFee] = useState(0); // Default to 0
   const [error, setError] = useState('');
   const [isOrderSuccess, setIsOrderSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const cityList = getCityList();
 
@@ -41,6 +44,7 @@ const CheckoutModal: React.FC = () => {
         setFormData({ name: '', phone: '', address: '', city: '' });
         setError('');
         setDeliveryFee(0);
+        setIsSubmitting(false);
     }, 300); // Should match modal animation duration
   };
 
@@ -78,12 +82,14 @@ const CheckoutModal: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cartItems.length === 0) {
       setError('Votre panier est vide.');
       return;
     }
+    
+    setIsSubmitting(true);
     setError('');
 
     const orderForSheet: Omit<Order, 'createdAt'> = {
@@ -92,12 +98,34 @@ const CheckoutModal: React.FC = () => {
         total: finalTotal,
     };
 
-    // 1. Send to Google Sheet in the background (fire and forget).
-    logOrderToSheet(orderForSheet);
+    try {
+        // 1. Send to Google Sheet
+        await logOrderToSheet(orderForSheet);
 
-    // 2. Show success to the user immediately.
-    clearCart();
-    setIsOrderSuccess(true);
+        // 2. Add each item as a Sale in the database so it appears in Admin dashboard
+        const salePromises = cartItems.map(item => {
+            const saleData = {
+                productId: item.id,
+                productName: item.name,
+                quantity: item.quantity,
+                totalPrice: Number(item.salePrice) * item.quantity,
+                profit: (Number(item.salePrice) - (Number(item.purchasePrice) || 0)) * item.quantity,
+                date: Date.now()
+            };
+            return addSaleToDb(saleData, item.stock || 0);
+        });
+
+        await Promise.all(salePromises);
+
+        // 3. Show success to the user
+        clearCart();
+        setIsOrderSuccess(true);
+    } catch (err: any) {
+        setError("Une erreur est survenue lors de la validation. Veuillez réessayer.");
+        console.error(err);
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   if (!isCheckoutOpen) return null;
@@ -225,8 +253,8 @@ const CheckoutModal: React.FC = () => {
                             <p className="font-medium text-secondary">{(item.salePrice * item.quantity).toFixed(2)} dh</p>
                         </div>
                     ))}
-                    <button type="submit" disabled={cartItems.length === 0} className="w-full bg-primary text-white font-bold py-3 px-4 rounded-md transition-colors duration-300 hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed">
-                        {`Terminez votre achat - ${finalTotal.toFixed(2)} dh`}
+                    <button type="submit" disabled={cartItems.length === 0 || isSubmitting} className="w-full bg-primary text-white font-bold py-3 px-4 rounded-md transition-colors duration-300 hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                        {isSubmitting ? 'Traitement en cours...' : `Terminez votre achat - ${finalTotal.toFixed(2)} dh`}
                     </button>
                 </div>
             </form>

@@ -5,10 +5,40 @@ export interface Product {
   name: string;
   description: string;
   image: string;
+  purchasePrice: number;
   salePrice: number;
-  stock?: number;
+  stock: number;
+  availableStock?: number;
+  initialStock?: number;
   isOrderBased?: boolean;
-  category?: string;
+  category?: 'simple' | 'pack' | 'sur-commande';
+  packItems?: PackItem[];
+  totalSold?: number;
+  createdAt?: any;
+}
+
+export interface PackItem {
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitCost: number;
+}
+
+export interface Sale {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  totalPrice: number;
+  profit: number;
+  date: number;
+}
+
+export interface Stats {
+  revenue: number;
+  profit: number;
+  totalSold: number;
+  stockValue: number;
 }
 
 export interface CartItem extends Product {

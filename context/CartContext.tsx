@@ -11,7 +11,6 @@ interface CartContextType {
   cartTotal: number;
 }
 
-// FIX: The previous attempt to provide a default context value resulted in typing errors. Reverting to the standard pattern of using `undefined` as the default and checking for it in the consumer hook. This ensures consumers are always within a provider.
 export const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -65,7 +64,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const cartCount = cartItems.reduce((count, item) => count + item.quantity, 0);
-  const cartTotal = cartItems.reduce((total, item) => total + item.salePrice * item.quantity, 0);
+  const cartTotal = cartItems.reduce((total, item) => total + (Number(item.salePrice) || 0) * item.quantity, 0);
 
   return (
     <CartContext.Provider value={{ cartItems, addToCart, updateQuantity, removeFromCart, clearCart, cartCount, cartTotal }}>

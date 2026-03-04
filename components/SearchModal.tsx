@@ -23,18 +23,15 @@ const SearchModal: React.FC = () => {
           const productsList = productSnapshot.docs.map(doc => {
             const data = doc.data();
             
-            // Calcul du stock : on prend la valeur maximale parmi tous les champs possibles
-            const stockValue = Math.max(
-                Number(data['stock'] || 0),
-                Number(data['availableStock'] || 0),
-                Number(data['Stock Initial'] || 0),
-                Number(data['disponible'] || 0),
-                Number(data['Disponible'] || 0)
-            );
+            const rawStock = data['availableStock'] ?? data['stock'] ?? 0;
+            const stockValue = isNaN(Number(rawStock)) ? 0 : Number(rawStock);
+
+            const salePriceValue = Number(data['salePrice'] ?? data['SALE PRICE'] ?? data['price'] ?? 0);
 
             return {
               id: doc.id,
               ...data,
+              salePrice: salePriceValue,
               stock: stockValue,
             } as Product
           });
@@ -52,7 +49,7 @@ const SearchModal: React.FC = () => {
   const filteredProducts = useMemo(() => {
     if (!searchTerm) return [];
     return allProducts.filter(p =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase())
+      p.name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [searchTerm, allProducts]);
 
@@ -63,7 +60,7 @@ const SearchModal: React.FC = () => {
 
   return (
     <Modal isOpen={isSearchOpen} onClose={handleClose} position="center">
-      <div className="flex flex-col h-full w-full max-w-2xl mx-auto bg-white rounded-lg shadow-xl">
+      <div className="flex flex-col h-full w-full max-w-2xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden">
         <div className="p-4 border-b border-gray-200">
           <div className="relative">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -79,7 +76,7 @@ const SearchModal: React.FC = () => {
             />
           </div>
         </div>
-        <div className="flex-grow overflow-y-auto p-4">
+        <div className="flex-grow overflow-y-auto p-4 bg-gray-50 min-h-[300px]">
           {loading && <Spinner />}
           {!loading && searchTerm && filteredProducts.length === 0 && (
             <p className="text-center text-secondary py-8">
@@ -87,14 +84,14 @@ const SearchModal: React.FC = () => {
             </p>
           )}
           {filteredProducts.length > 0 && (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-gray-100 bg-white rounded-lg border border-gray-100 shadow-sm">
               {filteredProducts.map(product => (
                 <li key={product.id}>
-                  <Link to={`/product/${product.id}`} onClick={handleClose} className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                  <Link to={`/product/${product.id}`} onClick={handleClose} className="flex items-center space-x-4 p-4 hover:bg-gray-50 transition-colors">
                     <img src={product.image} alt={product.name} className="w-16 h-16 object-contain border border-gray-200 rounded-md" />
                     <div className="flex-grow">
                       <p className="font-semibold text-primary">{product.name}</p>
-                      <p className="text-sm text-secondary">{product.salePrice.toFixed(2)} DH</p>
+                      <p className="text-sm text-secondary">{(product.salePrice || 0).toFixed(2)} DH</p>
                     </div>
                   </Link>
                 </li>
