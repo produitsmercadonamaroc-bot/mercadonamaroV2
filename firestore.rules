@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* =========================
+       ADMIN CHECK
+    ========================== */
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == "elhajiauto@gmail.com";
+    }
+
+    /* =========================
+       PUBLIC READ COLLECTIONS
+       (ALL WEBSITES)
+    ========================== */
+
+    // Cars (main website)
+    match /cars/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Products (old themes)
+    match /products/{docId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'availableStock', 'totalSold'])
+      );
+    }
+
+    match /elhauto_products/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Orders
+    match /orders/{docId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /elhauto_orders/{docId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Appointments
+    match /elhauto_appointments/{docId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Sell Requests
+    match /sellRequests/{docId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Sales
+    match /sales/{docId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Invoices (PRIVATE)
+    match /invoices/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    /* =========================
+       SECURITY DEFAULT (LOCK 🔒)
+    ========================== */
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

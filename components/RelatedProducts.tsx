@@ -13,7 +13,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProductId }) =
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchRelatedProducts = async () => {
+    const loadRelatedProducts = async () => {
       try {
         setLoading(true);
         const productsRef = collection(db, 'products');
@@ -48,7 +48,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProductId }) =
       }
     };
 
-    fetchRelatedProducts();
+    loadRelatedProducts();
   }, [currentProductId]);
 
   if (loading || products.length === 0) return null;

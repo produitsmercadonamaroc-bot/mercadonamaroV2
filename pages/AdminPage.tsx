@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { auth } from '../services/firebase';
+import { onSnapshot, collection, query, orderBy } from 'firebase/firestore';
+import { db, auth } from '../services/firebase';
 import { Product, Sale, Stats, PackItem } from '../types';
 import { useNavigate } from 'react-router-dom';
 import Spinner from '../components/Spinner';
@@ -92,34 +93,77 @@ const AdminPage: React.FC = () => {
 
   // Load data initially when user is authenticated
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (!currentUser) navigate('/login');
-      else {
+    let unsubProducts: () => void;
+    let unsubSales: () => void;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+      if (!currentUser) {
+        navigate('/login');
+      } else {
         setUser(currentUser);
-        loadData();
+        
+        // Real-time products
+        unsubProducts = onSnapshot(query(collection(db, 'products'), orderBy('name')), (snap) => {
+          const pList = snap.docs.map(doc => {
+            const data = doc.data();
+            const rawStock = data.availableStock ?? data.stock ?? data.initialStock ?? 0;
+            return {
+              id: doc.id,
+              ...data,
+              purchasePrice: Number(data.purchasePrice) || 0,
+              salePrice: Number(data.salePrice ?? data.price) || 0,
+              stock: Number(rawStock) || 0,
+              totalSold: Number(data.totalSold) || 0,
+              category: data.category || 'simple'
+            } as Product;
+          });
+          setProducts(pList);
+          setLoading(false);
+        }, (err) => {
+          console.error("Firestore products snapshot error:", err);
+          setLoading(false);
+        });
+
+        // Real-time sales
+        unsubSales = onSnapshot(query(collection(db, 'sales'), orderBy('date', 'desc')), (snap) => {
+          const sList = snap.docs.map(doc => {
+            const data = doc.data();
+            let dateValue = data.date;
+            if (dateValue && typeof dateValue.toMillis === 'function') {
+              dateValue = dateValue.toMillis();
+            }
+            return {
+              id: doc.id,
+              ...data,
+              date: dateValue || Date.now(),
+              totalPrice: Number(data.totalPrice) || 0,
+              profit: Number(data.profit) || 0,
+              quantity: Number(data.quantity) || 0
+            } as Sale;
+          });
+          setSales(sList);
+        }, (err) => {
+          console.error("Firestore sales snapshot error:", err);
+        });
       }
     });
-    return () => unsubscribe();
+
+    return () => {
+      unsubscribeAuth();
+      if (unsubProducts) unsubProducts();
+      if (unsubSales) unsubSales();
+    };
   }, [navigate]);
 
-  // RELOAD DATA AUTOMATICALLY WHEN CHANGING TABS
-  useEffect(() => {
-    if (user) {
-        loadData();
-    }
-  }, [currentTab, user]);
-
   const loadData = async () => {
-    // We only show spinner on initial load to avoid UI flickers on tab change
-    if (products.length === 0) setLoading(true);
+    // No longer strictly needed for data loading as we use onSnapshot,
+    // but kept for manual refresh if needed.
     try {
       const [p, s] = await Promise.all([getProducts(), getSales()]);
       setProducts(p);
       setSales(s.sort((a,b) => b.date - a.date));
     } catch (e) {
-      console.error("Failed to load admin data:", e);
-    } finally {
-      setLoading(false);
+      console.error("Failed to reload admin data:", e);
     }
   };
 

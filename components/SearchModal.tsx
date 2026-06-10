@@ -15,7 +15,7 @@ const SearchModal: React.FC = () => {
 
   useEffect(() => {
     if (isSearchOpen && allProducts.length === 0) {
-      const fetchProducts = async () => {
+      const loadProducts = async () => {
         try {
           setLoading(true);
           const productsCollection = collection(db, 'products');
@@ -42,7 +42,7 @@ const SearchModal: React.FC = () => {
           setLoading(false);
         }
       };
-      fetchProducts();
+      loadProducts();
     }
   }, [isSearchOpen, allProducts.length]);
 

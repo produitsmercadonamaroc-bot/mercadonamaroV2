@@ -20,7 +20,7 @@ const ProductPage: React.FC = () => {
   useEffect(() => {
     setLoading(true);
     setQuantity(1);
-    const fetchProduct = async () => {
+    const loadProduct = async () => {
       if (!id) {
         setError("ID de produit manquant.");
         setLoading(false);
@@ -54,7 +54,7 @@ const ProductPage: React.FC = () => {
         setLoading(false);
       }
     };
-    fetchProduct();
+    loadProduct();
   }, [id]);
 
   const handleBuyNow = () => {

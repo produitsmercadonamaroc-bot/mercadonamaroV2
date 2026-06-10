@@ -2,6 +2,7 @@
 import { 
   collection, 
   getDocs, 
+  getDoc,
   addDoc, 
   updateDoc, 
   deleteDoc, 
@@ -104,23 +105,64 @@ export const deleteProductFromDb = async (id: string) => {
 
 export const addSaleToDb = async (sale: Omit<Sale, 'id'>, currentStock: number) => {
   // 1. Enregistrer la vente dans la collection 'sales'
-  const saleRef = await addDoc(collection(db, SALES_COL), {
-    ...sale,
-    date: Date.now() // Timestamp local pour le tri immédiat
-  });
+  let saleRefId = 'local-only';
+  try {
+    const saleRef = await addDoc(collection(db, SALES_COL), {
+      ...sale,
+      date: Date.now() // Timestamp local pour le tri immédiat
+    });
+    saleRefId = saleRef.id;
+  } catch (err: any) {
+    if (err.code === 'permission-denied') {
+      console.warn("Permission denied for adding sale. This is expected if you are not logged in as admin.");
+    } else {
+      throw err;
+    }
+  }
   
   // 2. Mettre à jour le produit (stock et total des ventes)
   const productRef = doc(db, PRODUCTS_COL, sale.productId);
   
   try {
-    await updateDoc(productRef, {
-      availableStock: increment(-sale.quantity),
-      stock: increment(-sale.quantity),
-      totalSold: increment(sale.quantity)
-    });
+    // Récupérer les données du produit pour vérifier si c'est un pack
+    const productSnap = await getDoc(productRef);
+    
+    if (productSnap.exists()) {
+      const productData = productSnap.data() as Product;
+      
+      // Mise à jour du produit principal
+      try {
+        await updateDoc(productRef, {
+          availableStock: increment(-sale.quantity),
+          stock: increment(-sale.quantity),
+          totalSold: increment(sale.quantity)
+        });
+      } catch (err: any) {
+        if (err.code === 'permission-denied') {
+          console.warn("Permission denied for updating stock. This is expected if you are not logged in as admin.");
+        } else {
+          throw err;
+        }
+      }
+
+      // Si c'est un pack, on décrémente aussi le stock des produits composants
+      if (productData.category === 'pack' && productData.packItems) {
+        for (const item of productData.packItems) {
+          const componentRef = doc(db, PRODUCTS_COL, item.productId);
+          try {
+            await updateDoc(componentRef, {
+              availableStock: increment(-(item.quantity * sale.quantity)),
+              stock: increment(-(item.quantity * sale.quantity))
+            });
+          } catch (compErr) {
+            console.warn(`Could not update stock for component ${item.productId}:`, compErr);
+          }
+        }
+      }
+    }
   } catch (err) {
     console.error("Failed to update product stock, but sale was recorded:", err);
   }
 
-  return saleRef.id;
+  return saleRefId;
 };

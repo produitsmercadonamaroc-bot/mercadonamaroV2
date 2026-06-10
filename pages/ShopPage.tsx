@@ -17,7 +17,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ category = 'all' }) => {
   const { searchTerm } = useUI();
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const loadProducts = async () => {
       try {
         setLoading(true);
         const productsCollection = collection(db, 'products');
@@ -48,7 +48,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ category = 'all' }) => {
       }
     };
 
-    fetchProducts();
+    loadProducts();
   }, []);
 
   const filteredProducts = useMemo(() => {
